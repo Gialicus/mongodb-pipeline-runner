@@ -3,13 +3,14 @@ pub mod utils;
 
 use clap::Parser;
 use mongodb::bson::{self, doc};
-use mongodb::{bson::Document, Client, Collection};
+use mongodb::{bson::Document, Collection};
 use serde_json::Value;
 use std::fs::File;
 use std::io::Write;
 use types::cli::Cli;
 use utils::utils::{
-    convert_bson_fields_to_json_fields, create_dir_if_not_exisist, read_and_parse_pipeline,
+    convert_bson_fields_to_json_fields, create_dir_if_not_exisist, get_mongodb_collection,
+    read_and_parse_pipeline,
 };
 
 #[tokio::main]
@@ -18,10 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let pipeline: Vec<Document> = read_and_parse_pipeline(&cli.pipeline)?;
 
-    let uri = cli.url.as_str();
-    let client = Client::with_uri_str(uri).await?;
-    let db = client.database(&cli.database);
-    let collection: Collection<Document> = db.collection(&cli.collection);
+    let collection: Collection<Document> = get_mongodb_collection(&cli).await?;
 
     log_intermediate_results(&collection, pipeline, &cli.output_dir, cli.limit).await?;
 

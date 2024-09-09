@@ -1,7 +1,10 @@
 use std::{fs, path::Path};
 
-use mongodb::bson::Document;
-use serde_json::Value;
+use mongodb::{bson::Document, Client, Collection};
+use serde::ser::Error;
+use serde_json::{error, Value};
+
+use crate::types::cli::Cli;
 
 pub fn convert_bson_fields_to_json_fields(doc: Value) -> Value {
     // Verify is object
@@ -38,4 +41,14 @@ pub fn create_dir_if_not_exisist(output_path: &str) -> Result<&Path, Box<dyn std
         fs::create_dir(stages_dir)?;
     }
     Ok(stages_dir)
+}
+
+pub async fn get_mongodb_collection(
+    cli: &Cli,
+) -> Result<Collection<Document>, Box<dyn std::error::Error>> {
+    let uri = cli.url.as_str();
+    let client = Client::with_uri_str(uri).await?;
+    let db = client.database(&cli.database);
+    let collection: Collection<Document> = db.collection(&cli.collection);
+    Ok(collection)
 }
