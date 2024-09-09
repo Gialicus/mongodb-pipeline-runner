@@ -17,7 +17,7 @@ pub struct Cli {
     #[arg(short, long)]
     pub collection: String,
 
-    /// JSON file with pipeline file path
+    /// JSON file with pipeline path
     #[arg(short, long)]
     pub pipeline: String,
 
