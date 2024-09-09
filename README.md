@@ -14,8 +14,14 @@ Options:
   -V, --version                  Print version
 ```
 
+### Install
+
+```
+cargo install --path .
+```
+
 #### Example
 
 ```
-cargo run -- -u "mongodb://localhost:27017" -d "test_db" -c "test_collection" -p "test.json"
+mpr -u "mongodb://localhost:27017" -d "test_db" -c "test_collection" -p "test.json"
 ```

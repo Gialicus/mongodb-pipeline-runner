@@ -3,6 +3,10 @@ name = "mongodb-pipeline-runner"
 version = "0.0.1"
 edition = "2021"
 
+[[bin]]
+name = "mpr"
+path = "src/main.rs"
+
 [dependencies]
 clap = {version = "4.5.17", features = ["derive"]}
 mongodb = "3.1.0"
