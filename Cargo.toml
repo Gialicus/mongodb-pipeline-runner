@@ -1,6 +1,6 @@
 [package]
-name = "mdb-int-logs"
-version = "0.1.0"
+name = "mongodb-pipeline-runner"
+version = "0.0.1"
 edition = "2021"
 
 [dependencies]

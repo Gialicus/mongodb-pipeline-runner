@@ -1,61 +1,31 @@
+pub mod types;
+pub mod utils;
+
 use clap::Parser;
 use mongodb::bson::{self, doc};
 use mongodb::{bson::Document, Client, Collection};
 use serde_json::Value;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Write;
-use std::path::Path;
+use types::cli::Cli;
+use utils::utils::{
+    convert_bson_fields_to_json_fields, create_dir_if_not_exisist, read_and_parse_pipeline,
+};
 
-#[derive(Parser)]
-#[command(name = "MongoDB Pipeline Runner")]
-#[command(version = "1.0")]
-#[command(about = "Run MongoDB pipeline and logs intermediate results", long_about = None)]
-struct Cli {
-    /// MongoDB URL
-    #[arg(short, long)]
-    url: String,
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
 
-    /// Database name
-    #[arg(short, long)]
-    database: String,
+    let pipeline: Vec<Document> = read_and_parse_pipeline(&cli.pipeline)?;
 
-    /// Collection name
-    #[arg(short, long)]
-    collection: String,
+    let uri = cli.url.as_str();
+    let client = Client::with_uri_str(uri).await?;
+    let db = client.database(&cli.database);
+    let collection: Collection<Document> = db.collection(&cli.collection);
 
-    /// JSON file with pipeline file path
-    #[arg(short, long)]
-    pipeline: String,
+    log_intermediate_results(&collection, pipeline, &cli.output_dir, cli.limit).await?;
 
-    /// Output Directory
-    #[arg(short, long, default_value = "./stage_logs")]
-    output_dir: String,
-
-    /// Default results limit
-    #[arg(short, long, default_value = "10")]
-    limit: u32,
-}
-
-fn convert_bson_fields_to_json_fields(doc: Value) -> Value {
-    // Verify is object
-    match doc {
-        Value::Object(mut obj) => {
-            // iterate over field object
-            for (_, value) in obj.iter_mut() {
-                // check "$oid" in object
-                if let Some(oid) = value.get("$oid") {
-                    *value = Value::String(oid.as_str().unwrap().to_string());
-                }
-                // check "$date" in object
-                else if let Some(date) = value.get("$date") {
-                    *value = date.clone();
-                }
-            }
-            Value::Object(obj)
-        }
-        // return fields if is not $oid or $date
-        _ => doc,
-    }
+    Ok(())
 }
 
 async fn log_intermediate_results(
@@ -64,10 +34,7 @@ async fn log_intermediate_results(
     output_path: &str,
     limit: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let stages_dir = Path::new(output_path);
-    if !stages_dir.exists() {
-        fs::create_dir(stages_dir)?;
-    }
+    let stages_dir = create_dir_if_not_exisist(output_path)?;
 
     for (i, _) in pipeline.iter().enumerate() {
         let mut current_pipeline = pipeline[0..=i].to_vec();
@@ -94,24 +61,6 @@ async fn log_intermediate_results(
 
         println!("Stage {} results saved to {:?}", i + 1, filename);
     }
-
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
-
-    let pipeline_content = fs::read_to_string(&cli.pipeline)?;
-    let pipeline_json: Value = serde_json::from_str(&pipeline_content)?;
-    let pipeline: Vec<Document> = serde_json::from_value(pipeline_json)?;
-
-    let uri = cli.url.as_str();
-    let client = Client::with_uri_str(uri).await?;
-    let db = client.database(&cli.database);
-    let collection: Collection<Document> = db.collection(&cli.collection);
-
-    log_intermediate_results(&collection, pipeline, &cli.output_dir, cli.limit).await?;
 
     Ok(())
 }

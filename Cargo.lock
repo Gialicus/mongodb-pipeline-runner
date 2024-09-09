@@ -809,17 +809,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mdb-int-logs"
-version = "0.1.0"
-dependencies = [
- "clap",
- "mongodb",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -903,6 +892,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.77",
+]
+
+[[package]]
+name = "mongodb-pipeline-runner"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "mongodb",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
