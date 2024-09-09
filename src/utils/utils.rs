@@ -1,8 +1,7 @@
 use std::{fs, path::Path};
 
 use mongodb::{bson::Document, Client, Collection};
-use serde::ser::Error;
-use serde_json::{error, Value};
+use serde_json::Value;
 
 use crate::types::cli::Cli;
 
